@@ -1,15 +1,57 @@
-import React from 'react';
+import _ from 'lodash';
+import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
+import YTSearch from 'youtube-api-search';
+import SearchBar from './components/search_bar';
+import VideoList from './components/video_list';
+import VideoDetail from './components/video_detail';
 
-import App from './components/app';
-import reducers from './reducers';
+const API_key = 'AIzaSyB8JFV-yx4nwwI5jzzbSE4dtiVmjcODJzw'
 
-const createStoreWithMiddleware = applyMiddleware()(createStore);
 
-ReactDOM.render(
-  <Provider store={createStoreWithMiddleware(reducers)}>
-    <App />
-  </Provider>
-  , document.querySelector('.container'));
+// Create new component. This component should produce
+//some HTML
+class App extends Component {
+  constructor(props){
+    super(props);
+
+    this.state = {
+      videos: [],
+      selectedVideo: null
+     };
+
+      this.videoSearch('surfboard');
+
+  }
+
+  videoSearch(term){
+    // call back function(videos){}
+    YTSearch({key: API_key, term: term}, (videos) => {
+      this.setState({
+        videos: videos,
+        selectedVideo: videos[0]
+      });
+      // this.setState({ videos: videos});
+    });
+
+  }
+
+  render(){
+    const videoSearch = _.debounce((term) => {this.videoSearch(term) },300)
+
+    return (
+    <div>
+  <SearchBar onSearchTermChange={videoSearch} />
+  <VideoDetail video={this.state.selectedVideo}/>
+  <VideoList
+  // this is a function that updates ap state
+  onVideoSelect={selectedVideo => this.setState({selectedVideo})}
+  videos = { this.state.videos}/>
+  </div>
+    );
+  }
+}
+
+// Take this component's generated html and put it
+//on the page (in the DOM)
+ReactDOM.render(<App />, document.querySelector('.container'));
